@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/destination/data/models/accommodation.dart';
 import '../features/destination/data/repositories/destination_repository_impl.dart';
 
 class HotelStayScreen extends ConsumerWidget {
@@ -24,7 +25,7 @@ class HotelStayScreen extends ConsumerWidget {
             );
           }
 
-          final grouped = <String, List<dynamic>>{};
+          final grouped = <String, List<Accommodation>>{};
           for (final acc in accommodations) {
             final type = acc.type ?? 'other';
             grouped.putIfAbsent(type, () => []).add(acc);
@@ -57,7 +58,7 @@ class HotelStayScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHotelCard(BuildContext context, dynamic acc) {
+  Widget _buildHotelCard(BuildContext context, Accommodation acc) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(

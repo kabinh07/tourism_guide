@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -198,7 +199,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Row(
                 children: filtered
                     .map((dest) => DestinationCard(
-                          imageUrl: destinationImageUrl(dest.id),
+                          imageUrl: destinationImageUrl(dest.id, dbImageUrl: dest.imageUrl),
                           title: dest.name ?? '',
                           location: '${dest.district ?? ''}, BD',
                           rating: dest.popularityScore ?? 0.0,
@@ -234,55 +235,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final featured = destinations.last;
             return GestureDetector(
               onTap: () => context.go('/place/${featured.id}'),
-              child: Container(
-                width: double.infinity,
-                height: 160,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  image: DecorationImage(
-                    image: NetworkImage(destinationImageUrl(featured.id)),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.8),
-                        Colors.transparent,
-                      ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Stack(
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: destinationImageUrl(featured.id, dbImageUrl: featured.imageUrl),
+                      width: double.infinity,
+                      height: 160,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey[200],
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[200],
+                      ),
                     ),
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        featured.name ?? '',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                    Container(
+                      width: double.infinity,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.8),
+                            Colors.transparent,
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(LucideIcons.mapPin,
-                              color: Colors.white70, size: 14),
-                          const SizedBox(width: 4),
                           Text(
-                            '${featured.district ?? ''}, ${featured.division ?? ''}',
-                            style: const TextStyle(color: Colors.white70),
+                            featured.name ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(LucideIcons.mapPin,
+                                  color: Colors.white70, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${featured.district ?? ''}, ${featured.division ?? ''}',
+                                style: const TextStyle(color: Colors.white70),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             );

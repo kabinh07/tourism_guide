@@ -9,7 +9,7 @@ import '../../features/destination/data/models/insight.dart';
 import '../../features/destination/data/models/transport.dart';
 
 class DataSeeder {
-  static const String _seededKey = 'db_seeded_v1';
+  static const String _seededKey = 'db_seeded_v2';
 
   final Isar isar;
 
@@ -44,6 +44,7 @@ class DataSeeder {
           ..hotelPriceRange = d['hotelPriceRange'] as String?
           ..foodBudgetRange = d['foodBudgetRange'] as String?
           ..activityList = List<String>.from(d['activityList'] ?? [])
+          ..imageUrl = d['imageUrl'] as String?
           ..vectorEmbedding = null;
         return dest;
       }).toList();

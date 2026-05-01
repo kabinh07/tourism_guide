@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -335,12 +336,17 @@ class _RecommendationCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(14),
-              child: Image.network(
-                destinationImageUrl(destination.id),
+              child: CachedNetworkImage(
+                imageUrl: destinationImageUrl(destination.id, dbImageUrl: destination.imageUrl),
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                placeholder: (context, url) => Container(
+                  width: 80,
+                  height: 80,
+                  color: Colors.grey[200],
+                ),
+                errorWidget: (context, url, error) => Container(
                   width: 80,
                   height: 80,
                   color: Colors.grey[200],

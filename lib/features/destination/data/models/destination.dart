@@ -32,5 +32,7 @@ class Destination {
 
   List<String>? activityList;
 
+  String? imageUrl;
+
   List<double>? vectorEmbedding; // For future Qwen RAG integration
 }

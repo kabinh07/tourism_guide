@@ -62,28 +62,33 @@ const DestinationSchema = CollectionSchema(
       name: r'hotelPriceRange',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(
+    r'imageUrl': PropertySchema(
       id: 9,
+      name: r'imageUrl',
+      type: IsarType.string,
+    ),
+    r'name': PropertySchema(
+      id: 10,
       name: r'name',
       type: IsarType.string,
     ),
     r'popularityScore': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'popularityScore',
       type: IsarType.double,
     ),
     r'tags': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'tags',
       type: IsarType.stringList,
     ),
     r'travelMethods': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'travelMethods',
       type: IsarType.stringList,
     ),
     r'vectorEmbedding': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'vectorEmbedding',
       type: IsarType.doubleList,
     )
@@ -184,6 +189,12 @@ int _destinationEstimateSize(
     }
   }
   {
+    final value = object.imageUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.name;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -237,11 +248,12 @@ void _destinationSerialize(
   writer.writeDouble(offsets[6], object.estimatedBudget);
   writer.writeString(offsets[7], object.foodBudgetRange);
   writer.writeString(offsets[8], object.hotelPriceRange);
-  writer.writeString(offsets[9], object.name);
-  writer.writeDouble(offsets[10], object.popularityScore);
-  writer.writeStringList(offsets[11], object.tags);
-  writer.writeStringList(offsets[12], object.travelMethods);
-  writer.writeDoubleList(offsets[13], object.vectorEmbedding);
+  writer.writeString(offsets[9], object.imageUrl);
+  writer.writeString(offsets[10], object.name);
+  writer.writeDouble(offsets[11], object.popularityScore);
+  writer.writeStringList(offsets[12], object.tags);
+  writer.writeStringList(offsets[13], object.travelMethods);
+  writer.writeDoubleList(offsets[14], object.vectorEmbedding);
 }
 
 Destination _destinationDeserialize(
@@ -261,11 +273,12 @@ Destination _destinationDeserialize(
   object.foodBudgetRange = reader.readStringOrNull(offsets[7]);
   object.hotelPriceRange = reader.readStringOrNull(offsets[8]);
   object.id = id;
-  object.name = reader.readStringOrNull(offsets[9]);
-  object.popularityScore = reader.readDoubleOrNull(offsets[10]);
-  object.tags = reader.readStringList(offsets[11]);
-  object.travelMethods = reader.readStringList(offsets[12]);
-  object.vectorEmbedding = reader.readDoubleList(offsets[13]);
+  object.imageUrl = reader.readStringOrNull(offsets[9]);
+  object.name = reader.readStringOrNull(offsets[10]);
+  object.popularityScore = reader.readDoubleOrNull(offsets[11]);
+  object.tags = reader.readStringList(offsets[12]);
+  object.travelMethods = reader.readStringList(offsets[13]);
+  object.vectorEmbedding = reader.readDoubleList(offsets[14]);
   return object;
 }
 
@@ -297,12 +310,14 @@ P _destinationDeserializeProp<P>(
     case 9:
       return (reader.readStringOrNull(offset)) as P;
     case 10:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 11:
-      return (reader.readStringList(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 12:
       return (reader.readStringList(offset)) as P;
     case 13:
+      return (reader.readStringList(offset)) as P;
+    case 14:
       return (reader.readDoubleList(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2065,6 +2080,159 @@ extension DestinationQueryFilter
     });
   }
 
+  QueryBuilder<Destination, Destination, QAfterFilterCondition>
+      imageUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'imageUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition>
+      imageUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'imageUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition> imageUrlEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'imageUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition>
+      imageUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'imageUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition>
+      imageUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'imageUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition> imageUrlBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'imageUrl',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition>
+      imageUrlStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'imageUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition>
+      imageUrlEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'imageUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition>
+      imageUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'imageUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition> imageUrlMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'imageUrl',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition>
+      imageUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'imageUrl',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterFilterCondition>
+      imageUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'imageUrl',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Destination, Destination, QAfterFilterCondition> nameIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -3063,6 +3231,18 @@ extension DestinationQuerySortBy
     });
   }
 
+  QueryBuilder<Destination, Destination, QAfterSortBy> sortByImageUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterSortBy> sortByImageUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageUrl', Sort.desc);
+    });
+  }
+
   QueryBuilder<Destination, Destination, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -3203,6 +3383,18 @@ extension DestinationQuerySortThenBy
     });
   }
 
+  QueryBuilder<Destination, Destination, QAfterSortBy> thenByImageUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QAfterSortBy> thenByImageUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageUrl', Sort.desc);
+    });
+  }
+
   QueryBuilder<Destination, Destination, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -3292,6 +3484,13 @@ extension DestinationQueryWhereDistinct
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hotelPriceRange',
           caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Destination, Destination, QDistinct> distinctByImageUrl(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'imageUrl', caseSensitive: caseSensitive);
     });
   }
 
@@ -3392,6 +3591,12 @@ extension DestinationQueryProperty
       hotelPriceRangeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'hotelPriceRange');
+    });
+  }
+
+  QueryBuilder<Destination, String?, QQueryOperations> imageUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'imageUrl');
     });
   }
 

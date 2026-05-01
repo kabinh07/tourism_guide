@@ -12,7 +12,11 @@ const destinationImages = <int, String>{
 const _fallback =
     'https://images.unsplash.com/photo-1596422846543-75c6fc18a594?auto=format&fit=crop&q=80&w=800';
 
-String destinationImageUrl(int id, {bool large = false}) {
-  final base = destinationImages[id] ?? _fallback;
-  return large ? base.replaceAll('w=800', 'w=1200') : base;
+String destinationImageUrl(int id, {bool large = false, String? dbImageUrl}) {
+  final base = dbImageUrl ?? destinationImages[id] ?? _fallback;
+  if (!large) return base;
+  if (base.contains('w=')) {
+    return base.replaceFirst(RegExp(r'w=\d+'), 'w=1200');
+  }
+  return base.contains('?') ? '$base&w=1200' : '$base?w=1200';
 }

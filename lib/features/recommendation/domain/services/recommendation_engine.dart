@@ -34,7 +34,7 @@ class RecommendationEngine {
 
     // Tag match (0–30 pts): 10 pts per matching tag, max 3 tags
     if (prefs.preferredTags.isNotEmpty && d.tags != null) {
-      final matchCount = d.tags!
+      final matchCount = (d.tags ?? [])
           .where((t) => prefs.preferredTags.any(
               (p) => t.toLowerCase().contains(p.toLowerCase())))
           .length;

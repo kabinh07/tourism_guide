@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +27,7 @@ class PlaceDetailsScreen extends ConsumerWidget {
           }
           return _DetailsBody(
             destinationId: destinationId,
+            imageUrl: dest.imageUrl,
             name: dest.name ?? '',
             district: dest.district ?? '',
             division: dest.division ?? '',
@@ -43,6 +45,7 @@ class PlaceDetailsScreen extends ConsumerWidget {
 
 class _DetailsBody extends StatelessWidget {
   final int destinationId;
+  final String? imageUrl;
   final String name;
   final String district;
   final String division;
@@ -52,6 +55,7 @@ class _DetailsBody extends StatelessWidget {
 
   const _DetailsBody({
     required this.destinationId,
+    this.imageUrl,
     required this.name,
     required this.district,
     required this.division,
@@ -73,10 +77,11 @@ class _DetailsBody extends StatelessWidget {
           SizedBox(
             height: heroHeight,
             width: double.infinity,
-            child: Image.network(
-              destinationImageUrl(destinationId, large: true),
+            child: CachedNetworkImage(
+              imageUrl: destinationImageUrl(destinationId, large: true, dbImageUrl: imageUrl),
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: Colors.grey[300]),
+              placeholder: (context, url) => Container(color: Colors.grey[300]),
+              errorWidget: (context, url, error) => Container(color: Colors.grey[300]),
             ),
           ),
           // Back + favourite buttons
