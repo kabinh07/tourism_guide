@@ -1,45 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tourism_guide/widgets/category_chip.dart';
-import 'package:tourism_guide/widgets/destination_card.dart';
-import 'package:tourism_guide/screens/search_results_screen.dart';
-import 'package:tourism_guide/screens/trip_planner_screen.dart';
-import 'package:tourism_guide/screens/profile_screen.dart';
-import 'package:tourism_guide/screens/place_details_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+import '../core/constants/destination_images.dart';
+import '../features/destination/data/repositories/destination_repository_impl.dart';
+import '../features/recommendation/domain/services/recommendation_engine.dart';
+import '../widgets/category_chip.dart';
+import '../widgets/destination_card.dart';
+
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  String selectedCategory = 'All';
-  int _currentIndex = 0;
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: _buildBottomNav(context),
-      body: SafeArea(
-        child: _buildBody(),
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    switch (_currentIndex) {
-      case 1:
-        return const SearchResultsScreen();
-      case 2:
-        return const TripPlannerScreen();
-      case 3:
-        return const ProfileScreen();
-      case 0:
-      default:
-        return SingleChildScrollView(
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.surface,
+      child: SafeArea(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,12 +44,13 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 32),
               _buildPopularSection(context),
               const SizedBox(height: 32),
-              _buildRecommendedSection(context),
+              _buildFeaturedSection(context),
               const SizedBox(height: 20),
             ],
           ),
-        );
-    }
+        ),
+      ),
+    );
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -76,16 +68,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Text(
               'Bangladesh',
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    fontSize: 28,
-                  ),
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 28),
             ),
           ],
         ),
-        CircleAvatar(
-          radius: 24,
-          backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-          child: Icon(LucideIcons.user, color: Theme.of(context).primaryColor),
+        GestureDetector(
+          onTap: () => context.go('/profile'),
+          child: CircleAvatar(
+            radius: 24,
+            backgroundColor:
+                Theme.of(context).primaryColor.withValues(alpha: 0.1),
+            child: Icon(LucideIcons.user, color: Theme.of(context).primaryColor),
+          ),
         ),
       ],
     );
@@ -99,212 +93,210 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: const TextField(
-        decoration: InputDecoration(
+      child: TextField(
+        controller: _searchController,
+        decoration: const InputDecoration(
           icon: Icon(LucideIcons.search, color: Colors.grey),
           hintText: 'Search destinations, hotels...',
           border: InputBorder.none,
           hintStyle: TextStyle(color: Colors.grey),
         ),
+        onSubmitted: (query) {
+          if (query.trim().isNotEmpty) {
+            context.go('/search?q=${Uri.encodeComponent(query.trim())}');
+          }
+        },
       ),
     );
   }
 
   Widget _buildCategories(BuildContext context) {
-    final categories = ['All', 'Beach', 'Mountain', 'Forest', 'City'];
+    final tagsAsync = ref.watch(allDestinationTagsProvider);
+    final selected = ref.watch(selectedCategoryProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Categories',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
+        Text('Categories', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 16),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: categories
-                .map((cat) => Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: CategoryChip(
-                        label: cat,
-                        isActive: selectedCategory == cat,
-                        onTap: () => setState(() => selectedCategory = cat),
-                      ),
-                    ))
-                .toList(),
+        tagsAsync.when(
+          data: (tags) => SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: tags
+                  .map((cat) => Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: CategoryChip(
+                          label: cat,
+                          isActive: selected == cat,
+                          onTap: () =>
+                              ref.read(selectedCategoryProvider.notifier).state =
+                                  cat,
+                        ),
+                      ))
+                  .toList(),
+            ),
           ),
+          loading: () => const SizedBox(height: 44),
+          error: (_, __) => const SizedBox(height: 44),
         ),
       ],
     );
   }
 
   Widget _buildPopularSection(BuildContext context) {
+    final popularAsync = ref.watch(popularDestinationsProvider);
+    final selected = ref.watch(selectedCategoryProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Popular Destinations',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            Text(
-              'See All',
-              style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.w600,
+            Text('Popular Destinations',
+                style: Theme.of(context).textTheme.headlineMedium),
+            GestureDetector(
+              onTap: () => context.go('/search'),
+              child: Text(
+                'See All',
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                DestinationCard(
-                  imageUrl: 'https://images.unsplash.com/photo-1596422846543-75c6fc18a594?auto=format&fit=crop&q=80&w=800',
-                  title: 'Cox\'s Bazar',
-                  location: 'Chittagong, BD',
-                  rating: 4.8,
-                  price: r'$120',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const PlaceDetailsScreen()),
-                    );
-                  },
+        popularAsync.when(
+          data: (destinations) {
+            final filtered = selected == 'All'
+                ? destinations
+                : destinations
+                    .where((d) => d.tags?.any((t) =>
+                            t.toLowerCase() == selected.toLowerCase()) ==
+                        true)
+                    .toList();
+            if (filtered.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text('No destinations in this category',
+                      style: TextStyle(color: Colors.grey)),
                 ),
-                DestinationCard(
-                  imageUrl: 'https://images.unsplash.com/photo-1623940173693-0182697850a5?auto=format&fit=crop&q=80&w=800',
-                  title: 'Sylhet Tea Garden',
-                  location: 'Sylhet, BD',
-                  rating: 4.7,
-                  price: r'$80',
-                  onTap: () {},
-                ),
-                DestinationCard(
-                  imageUrl: 'https://images.unsplash.com/photo-1610444583737-14e3650f9686?auto=format&fit=crop&q=80&w=800',
-                  title: 'Sundarbans',
-                  location: 'Khulna, BD',
-                  rating: 4.9,
-                  price: r'$150',
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
+              );
+            }
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: filtered
+                    .map((dest) => DestinationCard(
+                          imageUrl: destinationImageUrl(dest.id),
+                          title: dest.name ?? '',
+                          location: '${dest.district ?? ''}, BD',
+                          rating: dest.popularityScore ?? 0.0,
+                          price: '${dest.estimatedBudget?.toStringAsFixed(0) ?? '?'} BDT',
+                          onTap: () => context.go('/place/${dest.id}'),
+                        ))
+                    .toList(),
+              ),
+            );
+          },
+          loading: () => const SizedBox(
+              height: 220,
+              child: Center(child: CircularProgressIndicator())),
+          error: (err, _) =>
+              SizedBox(height: 60, child: Center(child: Text('$err'))),
+        ),
       ],
     );
   }
 
-  Widget _buildRecommendedSection(BuildContext context) {
+  Widget _buildFeaturedSection(BuildContext context) {
+    final popularAsync = ref.watch(popularDestinationsProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Recommended for You',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
+        Text('Recommended for You',
+            style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          height: 160,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            image: const DecorationImage(
-              image: NetworkImage('https://images.unsplash.com/photo-1590603740183-980e7f6920eb?auto=format&fit=crop&q=80&w=800'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  Colors.black.withOpacity(0.8),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Sajek Valley Expedition',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+        popularAsync.when(
+          data: (destinations) {
+            if (destinations.isEmpty) return const SizedBox.shrink();
+            final featured = destinations.last;
+            return GestureDetector(
+              onTap: () => context.go('/place/${featured.id}'),
+              child: Container(
+                width: double.infinity,
+                height: 160,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  image: DecorationImage(
+                    image: NetworkImage(destinationImageUrl(featured.id)),
+                    fit: BoxFit.cover,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: const [
-                    Icon(LucideIcons.mapPin, color: Colors.white70, size: 14),
-                    SizedBox(width: 4),
-                    Text(
-                      'Rangamati, Chittagong Hill Tracts',
-                      style: TextStyle(color: Colors.white70),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.8),
+                        Colors.transparent,
+                      ],
                     ),
-                  ],
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        featured.name ?? '',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(LucideIcons.mapPin,
+                              color: Colors.white70, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${featured.district ?? ''}, ${featured.division ?? ''}',
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
+            );
+          },
+          loading: () => Container(
+            height: 160,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(24),
             ),
           ),
+          error: (_, __) => const SizedBox.shrink(),
         ),
       ],
-    );
-  }
-
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Theme.of(context).primaryColor,
-          unselectedItemColor: Colors.grey,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          items: const [
-            BottomNavigationBarItem(icon: Icon(LucideIcons.house), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(LucideIcons.search), label: 'Search'),
-            BottomNavigationBarItem(icon: Icon(LucideIcons.calendar), label: 'Plan'),
-            BottomNavigationBarItem(icon: Icon(LucideIcons.user), label: 'Profile'),
-          ],
-        ),
-      ),
     );
   }
 }

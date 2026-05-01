@@ -1,125 +1,131 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HotelStayScreen extends StatelessWidget {
-  const HotelStayScreen({super.key});
+import '../features/destination/data/repositories/destination_repository_impl.dart';
+
+class HotelStayScreen extends ConsumerWidget {
+  final int destinationId;
+
+  const HotelStayScreen({super.key, required this.destinationId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accommodationsAsync = ref.watch(accommodationsForDestinationProvider(destinationId));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hotels & Stays'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          _buildHotelCard(context, 'Sayeman Beach Resort', 'Cox\'s Bazar', 4.7, r'$200', 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'),
-          _buildHotelCard(context, 'Grand Sultan Resort', 'Sylhet', 4.9, r'$250', 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800'),
-          _buildHotelCard(context, 'Ocean Paradise Hotel', 'Cox\'s Bazar', 4.5, r'$180', 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800'),
-        ],
+      body: accommodationsAsync.when(
+        data: (accommodations) {
+          if (accommodations.isEmpty) {
+            return const Center(
+              child: Text('No accommodations found'),
+            );
+          }
+
+          final grouped = <String, List<dynamic>>{};
+          for (final acc in accommodations) {
+            final type = acc.type ?? 'other';
+            grouped.putIfAbsent(type, () => []).add(acc);
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              for (final type in ['budget', 'mid-range', 'resort'])
+                if (grouped.containsKey(type))
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Text(
+                          type.replaceFirst(type[0], type[0].toUpperCase()),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      ...grouped[type]!.map((acc) => _buildHotelCard(context, acc)),
+                    ],
+                  ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text('Error: $err')),
       ),
     );
   }
 
-  Widget _buildHotelCard(BuildContext context, String name, String location, double rating, String price, String imageUrl) {
+  Widget _buildHotelCard(BuildContext context, dynamic acc) {
     return Container(
-      margin: const EdgeInsets.bottom(24),
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            child: Image.network(
-              imageUrl,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    Row(
-                      children: [
-                        const Icon(LucideIcons.star, size: 16, color: Colors.amber),
-                        const SizedBox(width: 4),
-                        Text(rating.toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ],
+                Expanded(
+                  child: Text(
+                    acc.name ?? 'Hotel',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(LucideIcons.mapPin, size: 14, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(location, style: const TextStyle(color: Colors.grey)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        _AmenityIcon(LucideIcons.wifi),
-                        _AmenityIcon(LucideIcons.coffee),
-                        _AmenityIcon(LucideIcons.waves),
-                      ],
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withValues(alpha:0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    acc.type ?? 'Hotel',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
                     ),
-                    Text(
-                      '$price/night',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              acc.priceRange ?? 'Price not available',
+              style: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if ((acc.amenities ?? []).isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: (acc.amenities ?? [])
+                    .map((amenity) => Chip(
+                          label: Text(amenity),
+                          side: BorderSide(color: Colors.grey[300]!),
+                        ))
+                    .toList(),
+              ),
+            ],
+          ],
+        ),
       ),
-    );
-  }
-}
-
-class _AmenityIcon extends StatelessWidget {
-  final IconData icon;
-  const _AmenityIcon(this.icon);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(icon, size: 16, color: Colors.grey[600]),
     );
   }
 }
