@@ -104,9 +104,16 @@ class _DetailsBody extends StatelessWidget {
             child: Container(
               height: cardHeight,
               width: double.infinity,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1), // 10% Floating shadow
+                    blurRadius: 24,
+                    offset: const Offset(0, -8),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,8 +186,13 @@ class _DetailsBody extends StatelessWidget {
                     isScrollable: true,
                     tabAlignment: TabAlignment.start,
                     labelColor: Theme.of(context).primaryColor,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: Theme.of(context).primaryColor,
+                    unselectedLabelColor: Theme.of(context).colorScheme.outline,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicator: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
+                    ),
+                    dividerColor: Colors.transparent,
                     tabs: const [
                       Tab(text: 'Overview'),
                       Tab(text: 'Getting There'),
@@ -472,11 +484,26 @@ class _TipsTab extends StatelessWidget {
               ),
               const SizedBox(width: 24),
               Expanded(
-                child: ElevatedButton(
-                  onPressed: () {},
-                  child: const Text('Book Now',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.tertiary, // Sunset Orange
+                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.8),
+                      ],
+                    ),
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                    ),
+                    child: const Text('Book Now',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
                 ),
               ),
             ],

@@ -94,19 +94,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.04), // 4% primary color subtle shadow
+            blurRadius: 20,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: TextField(
         controller: _searchController,
-        decoration: const InputDecoration(
-          icon: Icon(LucideIcons.search, color: Colors.grey),
+        decoration: InputDecoration(
+          icon: Icon(LucideIcons.compass, color: Theme.of(context).colorScheme.onSurfaceVariant),
           hintText: 'Search destinations, hotels...',
           border: InputBorder.none,
-          hintStyle: TextStyle(color: Colors.grey),
+          hintStyle: TextStyle(color: Theme.of(context).colorScheme.outline),
         ),
         onSubmitted: (query) {
           if (query.trim().isNotEmpty) {
@@ -259,9 +259,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.8),
+                            Colors.black.withValues(alpha: 0.85),
                             Colors.transparent,
                           ],
+                          stops: const [0.0, 0.7],
                         ),
                       ),
                       padding: const EdgeInsets.all(20),
