@@ -9,7 +9,7 @@ import '../../features/destination/data/models/insight.dart';
 import '../../features/destination/data/models/transport.dart';
 
 class DataSeeder {
-  static const String _seededKey = 'db_seeded_v2';
+  static const String _seededKey = 'db_seeded_v3';
 
   final Isar isar;
 
@@ -27,6 +27,12 @@ class DataSeeder {
     final data = jsonDecode(jsonString) as Map<String, dynamic>;
 
     await isar.writeTxn(() async {
+      // Clear existing data to avoid stale records from previous schema versions
+      await isar.destinations.clear();
+      await isar.accommodations.clear();
+      await isar.transports.clear();
+      await isar.insights.clear();
+
       // Destinations
       final destList = (data['destinations'] as List).map((d) {
         final dest = Destination()

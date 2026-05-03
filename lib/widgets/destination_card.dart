@@ -90,17 +90,21 @@ class DestinationCard extends StatelessWidget {
                         const Icon(LucideIcons.star, size: 14, color: Colors.amber),
                         const SizedBox(width: 4),
                         Text(
-                          rating.toString(),
+                          rating.toStringAsFixed(1),
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
-                    Text(
-                      price,
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                    Flexible(
+                      child: Text(
+                        price,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ],

@@ -39,6 +39,8 @@ class DestinationRepositoryImpl implements IDestinationRepository {
         .nameContains(query, caseSensitive: false)
         .or()
         .descriptionContains(query, caseSensitive: false)
+        .or()
+        .tagsElementContains(query, caseSensitive: false)
         .findAll();
   }
 
